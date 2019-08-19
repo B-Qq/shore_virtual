@@ -17,11 +17,13 @@ else:
 # else:
 #     print(3333)
 
-sum = 0
-for x in range(100, 105):
-    sum += x;
-print('sum:%d'%sum)
+"""
+def foo():
+    global a //全局变量使用
+    a = 200;
 
-while True:
-    print(111)
-
+if __name__ == "__main__":
+    a = 100 //a为全局变量
+    foo()
+    print(a)
+"""
