@@ -8,11 +8,20 @@ else:
 '''
 
 
-value  = float(input("请输入长度:"))
-unit = input("请输入长度")
-if unit == 'in' or unit == '英寸':
-    print(2111)
-elif unit == 'cm' or unit == '厘米':
-    print(22222)
-else:
-    print(3333)
+# value  = float(input("请输入长度:"))
+# unit = input("请输入长度")
+# if unit == 'in' or unit == '英寸':
+#     print(2111)
+# elif unit == 'cm' or unit == '厘米':
+#     print(22222)
+# else:
+#     print(3333)
+
+sum = 0
+for x in range(100, 105):
+    sum += x;
+print('sum:%d'%sum)
+
+while True:
+    print(111)
+
