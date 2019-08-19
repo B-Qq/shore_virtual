@@ -119,3 +119,32 @@ if __name__ == "__main__":
     print(result)
 
 """
+
+""" 类的使用  self.__name 属性名或方法名前加 __ 标识私有
+class Student:
+    def __init__(self, name, age):
+        self.__name = name;
+        self.__age = age;
+    def study(self, course_name):
+        print("%s 正在学习 %s" % (self.__name, course_name))
+
+if __name__ == "__main__":
+    s = Student("李明", 2);
+    s.study("英语")
+    ss = Student("丽丽", 5)
+    ss.study("英语")
+
+"""
+
+class Test:
+    def __init__(self, foo):
+        self.__foo = foo
+    def __bar(self):
+        print(self.__foo)
+        print("__bar")
+
+def main():
+    t = Test("cc")
+
+if __name__ == "__main__":
+    main()
