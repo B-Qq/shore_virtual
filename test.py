@@ -27,3 +27,17 @@ if __name__ == "__main__":
     foo()
     print(a)
 """
+
+""" 简单字符串使用
+def main():
+    str1 = 'hello world'
+    print(len(str1))
+    print(str1.capitalize())
+    print(str1.upper())
+    print(str1.find('or'))
+    print(str1[0:5])
+
+if __name__ == "__main__":
+    main()
+
+"""
