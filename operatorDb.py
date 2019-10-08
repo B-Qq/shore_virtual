@@ -1,6 +1,8 @@
 import pymysql
 #操作数据库获取桩号端口号
 def OperatorDb(cf):
+    stake_port = []
+    STAKEID = []
     host = cf.get("DB", "Host")  # 数据库IP
     port = int(cf.get("DB", "Port"))  # 数据库端口号
     user = cf.get("DB", "User") # 用户名
@@ -30,9 +32,10 @@ def OperatorDb(cf):
             id = row[0]
             name = row[1]
             stake_port.append([row[0], row[1]])
-            STAKEID.append(row[0])
+            #STAKEID.append(row[0])
     except Exception as e:
         raise e
     finally:
         db.close()  # 关闭连接
     print ("STAKE:PORT-->",stake_port)
+    return stake_port

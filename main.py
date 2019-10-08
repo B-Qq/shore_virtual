@@ -31,8 +31,6 @@ import operatorDb as db
 # DIST_FLAG.set(0)
 
 
-stake_port = []
-STAKEID = []
 #配置文件读取
 cf = configparser.ConfigParser()
 cf.read('conf.ini')
@@ -138,8 +136,11 @@ CalcWarn.current(0)
 # tk.Checkbutton(top,text='母线开关连接确认状态',variable=m_switch_state, width=17,background='gray').place(x=warnbasex + 167,y = warnstatey)
 
 if __name__ == "__main__":
-    db.OperatorDb(cf)
+    stake_port = db.OperatorDb(cf)
+    STAKEID = []
     # 设置下拉菜单中的值为桩编号
+    for it in stake_port:
+        STAKEID.append(it[0])
     StakeNo['value'] = STAKEID
     # 设置默认值，即默认下拉框中的内容
     StakeNo.current(0)
