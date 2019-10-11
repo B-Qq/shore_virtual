@@ -374,7 +374,7 @@ class shorePowerProtocol(object):
             if ((deviceStrToProtocol(stake_no) + port) in self.t_start_elec):
                 # self.send_calc_exception(deviceStrToHexXX(stake_no, len(stake_no)), [deviceStrToHexXX(port, len(port))[0]]
                 #                      , self.t_start_elec[deviceStrToProtocol(stake_no) + port].count,1)
-                self.ti.insert(END, get_time() + "+++产生过程中示值采集异常(尖峰平谷的和与总不等)\n")
+                self.ti.insert(END, get_time() + "+++产止码示值采集异常(尖峰平谷的和与总不等)\n")
                 self.ti.see(END);
             else:
                 self.ti.insert(END, get_time() + "+++当前桩未在供电中,无法产生示值采集异常(尖峰平谷的和与总不等)\n")
