@@ -1,6 +1,6 @@
 import pymysql
 #操作数据库获取桩号端口号
-def OperatorDb(cf):
+def QueryStakePort(cf):
     stake_port = []
     STAKEID = []
     host = cf.get("DB", "Host")  # 数据库IP

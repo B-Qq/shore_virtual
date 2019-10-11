@@ -63,6 +63,7 @@ send_all_status_tt = 0
 #Õ¾ºÅ
 station_array = ['\x01','\x02','\x03','\x04','\x05','\x06','\x07','\x08'];
 station_array_d = [0x01,0x02,0x03,0x04,0x05,0x06];
+
 def destroy_top():
     time.sleep(6)
     top.destroy()
