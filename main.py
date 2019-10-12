@@ -4,6 +4,8 @@ import operatorDb as db
 import layout
 import tcpclient as tcl
 import shorePowerProtocol as protocol
+from setConfigLayout import *
+import time
 
 #配置文件读取
 cf = configparser.ConfigParser()
@@ -11,10 +13,11 @@ cf.read('conf.ini')
 STATION = int(cf.get("STATION", "ID"))
 
 if __name__ == "__main__":
+    sf = setConfigLayout(cf)
     stake_port = db.QueryStakePort(cf)
     tk = layout.layout(stake_port,STATION)#布局初始化
     tcpClient = tcl.tcp_init(cf,tk.getScrolledText(),tk.getTop()) #tcp连接初始化
-    pl = protocol.shorePowerProtocol(tcpClient,STATION,cf,tk)#协议初始化
+    pl = protocol.shorePowerProtocol(tcpClient,lambda :tcl.tcpReConnect(cf),STATION,cf,tk)#协议初始化
 
     tk.sendButton(pl.send_signals,pl.heatbeatrequest,pl.heatbeatrespone)#发送按键绑定
     tk.sendCalcExceptionButton(pl.dealCalcException)

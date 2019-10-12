@@ -38,7 +38,7 @@ class shore():
 
     def calcStop(self):
         self.flag = False
-        self.count = 0
+        # self.count = 0
 
     def calcThreadStop(self):
         self.ThreadStop = threading.Thread(target=self.send_calcend, name='send_calcend')
@@ -49,6 +49,20 @@ class shore():
         self.calcStop()
         time.sleep(6)
         self.protocol.send_calc_end(self.deivceId, self.port, count)
+        self.protocol.ti.insert(END, get_time() + "#######>>接电箱" + str(self.deivceId) + str(self.port) + "发送止码\n")
+        self.protocol.ti.see(END);
+        self.protocol.signal_send(self.deivceId, self.port, 5)
+        self.protocol.ti.insert(END, get_time() + "#######>>接电箱" + str(self.deivceId) + str(self.port) + "发送遥信完成\n")
+        self.protocol.ti.see(END);
+
+    def calcThreadStopException(self):
+        threading.Thread(target=self.send_calcend_exception, name='send_calcend_exception').start()
+
+    def send_calcend_exception(self):
+        count = self.count
+        self.calcStop()
+        time.sleep(6)
+        self.protocol.send_calc_end_exception(self.deivceId, self.port, count)
         self.protocol.ti.insert(END, get_time() + "#######>>接电箱" + str(self.deivceId) + str(self.port) + "发送止码\n")
         self.protocol.ti.see(END);
         self.protocol.signal_send(self.deivceId, self.port, 5)

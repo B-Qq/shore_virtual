@@ -62,9 +62,11 @@ def intStrtoHex(intstr):
 
 class shorePowerProtocol(object):
     #socket套接字,站号,配置文件,滚动文本框
-    def __init__(self,tcpClient,StationId,cf,tk):
+    def __init__(self,tcpClient,tcpReConnect,StationId,cf,tk):
         self.tcpClient = tcpClient
+        self.StationId = StationId
         self.cf = cf
+        self.tcpReConnect = tcpReConnect
         self.ti = tk.getScrolledText()
         self.tk = tk
         self.jian = int(cf.get("CALC", "Jian"))  # 尖
@@ -181,7 +183,6 @@ class shorePowerProtocol(object):
         self.tcpClient.send(date)
         time.sleep(0.01)
 
-
     # 止码
     def send_calc_end(self, stake_no, port, count):
         calc_end = [0x68, 0x31, 0x00, 0x70, 0x00, 0x02, 0x00, 0x82, 0x85, 0x06, 0x00, 0x00, 0x08, 0x00,
@@ -195,6 +196,21 @@ class shorePowerProtocol(object):
         date = struct.pack("%dB" % (len(calc_end)), *calc_end)
         self.tcpClient.send(date)
         time.sleep(0.01)
+
+    # 止码示值采集异常(尖峰平谷的和与总不等)
+    def send_calc_end_exception(self, stake_no, port, count):
+        calc_end = [0x68, 0x31, 0x00, 0x70, 0x00, 0x02, 0x00, 0x82, 0x85, 0x06, 0x00, 0x00, 0x08, 0x00,
+                    0x00] + stake_no + port + [0x02]
+        calc_end = calc_end + self.time_conver()
+        calc_end = calc_end + self.calc_calc_count(self.jian, 0, count + 1)
+        calc_end = calc_end + self.calc_calc_count(self.feng, 0, count + 1)
+        calc_end = calc_end + self.calc_calc_count(self.ping, self.unit, count + 1)
+        calc_end = calc_end + self.calc_calc_count(self.gu, 0, count + 1)
+        calc_end = calc_end + self.calc_calc_count(self.zong + 1000, self.unit, count + 1)
+        date = struct.pack("%dB" % (len(calc_end)), *calc_end)
+        self.tcpClient.send(date)
+        time.sleep(0.01)
+
 
     #发送遥信数据
     def signal_send(self, stake_no, port, type):
@@ -296,7 +312,6 @@ class shorePowerProtocol(object):
         stake_no = str(self.tk.StakeNoCombox.get())
         warnArray = self.tk.warnArray
         port = str(self.tk.port_e.get())
-        #print('port>>>', deviceStrToHexXX(port, 1))
         self.ti.insert(END, get_time() + "+++SEND岸电遥信数据\n")
         self.ti.see(END);
         yx = [0x68, 0x31, 0x00, 0x80, 0x00, 0x02, 0x00, 0x86, 0x89, 0x01, 0x00, 0x00, 0x01, 0x00,
@@ -317,7 +332,6 @@ class shorePowerProtocol(object):
         date = struct.pack("%dB" % (len(yx)), *yx)
         self.tcpClient.send(date)
         time.sleep(0.01)
-        #self.dealCalcException()
 
     #异常产生
     def dealCalcException(self):
@@ -355,7 +369,7 @@ class shorePowerProtocol(object):
             if ((deviceStrToProtocol(stake_no) + port) in self.t_start_elec):
                 self.t_start_elec[deviceStrToProtocol(stake_no) + port].count = 9999
                 self.t_start_elec[deviceStrToProtocol(stake_no) + port].calcThreadStop()
-                # self.send_calc_exception(deviceStrToHexXX(stake_no, len(stake_no)), [deviceStrToHexXX(port, len(port))[0]], 9999,0)
+                del self.t_start_elec[deviceStrToProtocol(stake_no) + port]
                 self.ti.insert(END, get_time() + "+++产生止码电表飞走\n")
                 self.ti.see(END);
             else:
@@ -365,6 +379,7 @@ class shorePowerProtocol(object):
             if ((deviceStrToProtocol(stake_no) + port) in self.t_start_elec):
                 self.t_start_elec[deviceStrToProtocol(stake_no) + port].count = -1
                 self.t_start_elec[deviceStrToProtocol(stake_no) + port].calcThreadStop()
+                del self.t_start_elec[deviceStrToProtocol(stake_no) + port]
                 self.ti.insert(END, get_time() + "+++产生止码电表倒走\n")
                 self.ti.see(END);
             else:
@@ -372,9 +387,9 @@ class shorePowerProtocol(object):
                 self.ti.see(END);
         elif calcExceptionMap[self.tk.CalcWarnComBox.get()] == 6:  # 示值采集异常(尖峰平谷的和与总不等)[止码]
             if ((deviceStrToProtocol(stake_no) + port) in self.t_start_elec):
-                # self.send_calc_exception(deviceStrToHexXX(stake_no, len(stake_no)), [deviceStrToHexXX(port, len(port))[0]]
-                #                      , self.t_start_elec[deviceStrToProtocol(stake_no) + port].count,1)
-                self.ti.insert(END, get_time() + "+++产止码示值采集异常(尖峰平谷的和与总不等)\n")
+                self.t_start_elec[deviceStrToProtocol(stake_no) + port].calcThreadStopException()
+                del self.t_start_elec[deviceStrToProtocol(stake_no) + port]
+                self.ti.insert(END, get_time() + "+++产生止码示值采集异常(尖峰平谷的和与总不等)\n")
                 self.ti.see(END);
             else:
                 self.ti.insert(END, get_time() + "+++当前桩未在供电中,无法产生示值采集异常(尖峰平谷的和与总不等)\n")
@@ -444,7 +459,13 @@ class shorePowerProtocol(object):
         port = [];
         self.t_start_elec = {};
         while (1):
-            recv = self.tcpClient.recv(BUFFSIZE)
+            try:
+                recv = self.tcpClient.recv(BUFFSIZE)
+            except:
+                tk.messagebox.showerror("失去连接", '与站级前置失去连接')
+                self.tcpClient.close()
+                self.tcpClient = self.tcpReConnect()
+                self.protocolInit(self.StationId)
             if (len(recv) >= 25):
                 stake_no = deviceStrToHex(recv[15:23])  # 桩号
                 t_id = [int(str(hex(recv[24])), 16)]  # T接ID
