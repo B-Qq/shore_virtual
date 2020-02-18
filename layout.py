@@ -8,7 +8,9 @@ import sys
 
 class layout(object):
     # 桩号端口号集合, 站号, socket文件描述符
-    def __init__(self, StakePortSet, StationId):
+    def __init__(self, StakePortSet, StationId,cf,db):
+        self.cf = cf
+        self.db = db;
         self.StakePortSet = StakePortSet
         self.top = tk.Tk(className='岸电云网站内监控模拟器')
         self.setTitle("站内监控模拟软件")
@@ -61,14 +63,15 @@ class layout(object):
         PortY = 16
         self.port_e = StringVar(self.top, value='1')
         Label(self.top, text="端口号:").place(x=400, y=PortY)
-        tk.Entry(self.top, bd=2, textvariable=self.port_e).place(x=450, y=PortY)
+        tk.Entry(self.top, bd=2, textvariable=self.port_e, width=5).place(x=450, y=PortY)
 
     #设置站号
     def setStationId(self,StationId):
         StationY = 16
-        text1 = Text(self.top, width=5, height=1)
-        text1.place(x=630, y=StationY)
-        text1.insert(INSERT, "站:" + str(StationId))
+        # text1 = Text(self.top, width=24, height=1)
+        # text1.place(x=520, y=StationY)
+        # text1.insert(INSERT, self.db.QueryStationName(self.cf, StationId))
+        Label(self.top, width = 24, text = self.db.QueryStationName(self.cf, StationId),background = 'green').place(x=520,y=StationY)
 
     #连接线缆按钮
     def connect(self, link_button):

@@ -10,12 +10,12 @@ class setConfigLayout(object):
         self.cf = cf
         self.setConfig = tk.Tk(className='参数设置')
         self.setConfig.title("参数设置")
-        self.setConfig.geometry('450x220')
+        self.setConfig.geometry('450x190')
         self.inputFrontIp()
         self.inputFrontPort()
         self.inputDBIp()
         self.inputDBPort()
-        self.inputStation()
+        # self.inputStation()
         self.inputUser()
         self.inputDBpasswd()
         self.inputDB()
@@ -81,7 +81,7 @@ class setConfigLayout(object):
         tk.Entry(self.setConfig, bd=2, textvariable=self.Station,width = 50).place(x=70, y=PortY)
 
     def connect(self):
-        Button(self.setConfig, text='确定', command=self.sureButton, width=55, background='red').place(x=20, y=180)
+        Button(self.setConfig, text='确定', command=self.sureButton, width=55, background='red').place(x=20, y=150)
 
     def sureButton(self):
         self.cf.set("TCP","Host",self.FrontIp.get())
@@ -91,7 +91,7 @@ class setConfigLayout(object):
         self.cf.set("DB","user", self.DBUser.get())
         self.cf.set("DB", "password", self.DBPasswd.get())
         self.cf.set("DB", "db", self.DB.get())
-        self.cf.set("STATION", "ID", self.Station.get())
+        # self.cf.set("STATION", "ID", self.Station.get())
 
         with open('conf.ini','w') as fw:
             self.cf.write(fw)

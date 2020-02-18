@@ -5,6 +5,7 @@ import layout
 import tcpclient as tcl
 import shorePowerProtocol as protocol
 from setConfigLayout import *
+from setStationId import *
 import time
 
 #配置文件读取
@@ -13,9 +14,11 @@ cf.read('conf.ini')
 
 if __name__ == "__main__":
     sf = setConfigLayout(cf)
-    stake_port = db.QueryStakePort(cf)
+    stationId = db.QueryStationId(cf)  #查询所有站号
+    setStationIdLayout(cf, stationId) #设置模拟的站号
+    stake_port = db.QueryStakePort(cf) #查询桩号端口号
     STATION = int(cf.get("STATION", "ID"))
-    tk = layout.layout(stake_port,STATION)#布局初始化
+    tk = layout.layout(stake_port,STATION,cf,db)#布局初始化
     tcpClient = tcl.tcp_init(cf,tk.getScrolledText(),tk.getTop()) #tcp连接初始化
     pl = protocol.shorePowerProtocol(tcpClient,lambda :tcl.tcpReConnect(cf),STATION,cf,tk)#协议初始化
 

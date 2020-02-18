@@ -24,6 +24,22 @@ def deviceStrToHex(deviceStr):
     deviceHex[7] = int(str(hex(deviceStr[7])), 16)
     return deviceHex
 
+def StationIdHex(StationId):
+    StationIdhex = [0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
+    if len(StationId) < 16:
+        for i in range(0,16 - len(StationId)):
+            StationId = '0' + StationId;
+    StationIdhex[0] = int('0x' + StationId[14:16], 16)
+    StationIdhex[1] = int('0x' + StationId[12:14], 16)
+    StationIdhex[2] = int('0x' + StationId[10:12], 16)
+    StationIdhex[3] = int('0x' + StationId[8:10], 16)
+    StationIdhex[4] = int('0x' + StationId[6:8], 16)
+    StationIdhex[5] = int('0x' + StationId[4:6], 16)
+    StationIdhex[6] = int('0x' + StationId[2:4], 16)
+    StationIdhex[7] = int('0x' + StationId[0:2], 16)
+    print('1111',StationIdhex)
+    return StationIdhex
+
 #获取时间
 def get_time():
     return time.strftime('%H:%M:%S',time.localtime(time.time()))
@@ -64,7 +80,6 @@ class shorePowerProtocol(object):
     #socket套接字,站号,配置文件,滚动文本框
     def __init__(self,tcpClient,tcpReConnect,StationId,cf,tk):
         self.tcpClient = tcpClient
-        self.StationId = StationId
         self.cf = cf
         self.tcpReConnect = tcpReConnect
         self.ti = tk.getScrolledText()
@@ -76,14 +91,17 @@ class shorePowerProtocol(object):
         self.zong = int(cf.get("CALC", "Zong"))  # 总
         self.unit = int(cf.get("CALC", "Unit"))  # 增长幅度
         self.m_num = int(self.cf.get("METER", "Num"))
-        self.protocolInit(StationId)
+        self.StationId = StationIdHex(str(StationId))
+        self.protocolInit()
         self.protocolRecv()
         threading.Thread(target=self.start_distribution, name='start_distribution').start()
 
     #协议初始化,发送协议标识帧
-    def protocolInit(self,StationId):
-        protocol = '\x68\x02' + station_array[StationId] + '\x00\x00\x09\x24\x04\x00\x00\x00\x00'  # 发送协议标识帧
-        self.tcpClient.send(protocol.encode())
+    def protocolInit(self):
+        protocol = [0x68,0x02] + self.StationId + [0x00,0x00]  # 发送协议标识帧
+        date = struct.pack("%dB" % (len(protocol)), *protocol)
+        self.tcpClient.send(date)
+        time.sleep(0.01)
 
     def protocolRecv(self):
         p_recv = threading.Thread(target=self.start_recv, name='start_recv').start()
@@ -236,15 +254,15 @@ class shorePowerProtocol(object):
     def start_distribution(self):
         while True:
             if self.tk.DIST_METER_FLAG.get() == 1:
-                d_jl = [0x68, 0x2F, 0x00, 0x54, 0x00, 0x00, 0x00, 0x87, 0x8f, 0x01, 0x00, 0x00, 0x03, 0x00, 0x00] + [
-                    0x02, 0x00, 0x00, 0x09, 0x24, 0x04, 0x00, 0x00] + self.time_conver()
+                d_jl = [0x68, 0x2F, 0x00, 0x54, 0x00, 0x00, 0x00, 0x87, 0x8f, 0x01, 0x00, 0x00, 0x03, 0x00, 0x00] + \
+                       self.StationId + self.time_conver()
                 d_jl = d_jl + [0x02, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00,
                                0x00, 0x08, 0x00, 0x00, 0x00]
                 date = struct.pack("%dB" % (len(d_jl)), *d_jl)
                 self.tcpClient.send(date)
                 time.sleep(0.01)
-                d_yc = [0x68, 0x77, 0x00, 0xA6, 0x05, 0x02, 0x00, 0x87, 0x8F, 0x01, 0x00, 0x00, 0x02, 0x00, 0x00] + [
-                    0x02, 0x00, 0x00, 0x09, 0x24, 0x04, 0x00, 0x00] + self.time_conver()
+                d_yc = [0x68, 0x77, 0x00, 0xA6, 0x05, 0x02, 0x00, 0x87, 0x8F, 0x01, 0x00, 0x00, 0x02, 0x00, 0x00] + \
+                       self.StationId + self.time_conver()
                 d_yc = d_yc + [0x94, 0x11, 0x00, 0x00, 0x4C, 0x04, 0x00, 0x00, 0x58, 0x02, 0x00, 0x00, 0xB0, 0x04, 0x00,
                                0x00, 0xBC, 0x02, 0x00, 0x00, 0xF4, 0x01, 0x00, 0x00, 0x14, 0x05, 0x00, 0x00, 0xFC, 0x08,
                                0x00, 0x00, 0x84, 0x03, 0x00, 0x00, 0x60, 0x09, 0x00, 0x00, 0x4C, 0x04, 0x00, 0x00, 0x4C,
@@ -411,11 +429,8 @@ class shorePowerProtocol(object):
         send_all_status_tt.start()
 
     def warn_end(self):
-        d_yx = [0x68, 0x31, 0x00, 0x54, 0x00, 0x00, 0x00, 0x87, 0x8F, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00] + [0x02, 0x00,
-                                                                                                             0x00, 0x09,
-                                                                                                             0x24, 0x04,
-                                                                                                             0x00,
-                                                                                                             0x00] + self.time_conver()
+        d_yx = [0x68, 0x31, 0x00, 0x54, 0x00, 0x00, 0x00, 0x87, 0x8F, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00] + \
+               self.StationId + self.time_conver()
         d_yx = d_yx + [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         date = struct.pack("%dB" % (len(d_yx)), *d_yx)
@@ -425,11 +440,8 @@ class shorePowerProtocol(object):
         self.ti.see(END);
 
     def warn_start(self):
-        d_yx = [0x68, 0x31, 0x00, 0x54, 0x00, 0x00, 0x00, 0x87, 0x8F, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00] + [0x02, 0x00,
-                                                                                                             0x00, 0x09,
-                                                                                                             0x24, 0x04,
-                                                                                                             0x00,
-                                                                                                             0x00] + self.time_conver()
+        d_yx = [0x68, 0x31, 0x00, 0x54, 0x00, 0x00, 0x00, 0x87, 0x8F, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00] + \
+               self.StationId + self.time_conver()
         d_yx = d_yx + [0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
                        0x01, 0x01, 0x01, 0x01, 0x01, 0x01]
         date = struct.pack("%dB" % (len(d_yx)), *d_yx)
