@@ -450,7 +450,10 @@ class shorePowerProtocol(object):
         sec = sec[2:6].zfill(4)
         h_time[1] = int('0x' + sec[0:2], 16)
         h_time[0] = int('0x' + sec[2:4], 16)
-        h_time[6] = 0x13
+        ss_time = time.strftime("%y", time.localtime());
+        print("ss_time:",int(bytes.fromhex(ss_time).hex()));
+        h_time[6] = int(bytes.fromhex(ss_time).hex());
+        # h_time[6] = 0x14
         return h_time
 
     def start_recv(self):
